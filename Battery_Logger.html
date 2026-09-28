@@ -1,0 +1,1303 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Battery Logger v17.4 — CLINTOY HUB</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+      --panel-bg: rgba(30, 41, 59, 0.7);
+      --panel-border: rgba(255, 255, 255, 0.08);
+      --panel-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.5);
+      
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      
+      --accent-blue: #38bdf8;
+      --accent-cyan: #06b6d4;
+      --accent-gradient: linear-gradient(135deg, #2563eb, #06b6d4);
+      --success: #10b981;
+      --success-gradient: linear-gradient(135deg, #059669, #10b981);
+      --danger: #ef4444;
+      --danger-gradient: linear-gradient(135deg, #dc2626, #f87171);
+      --warning: #f59e0b;
+      
+      --mono-font: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      min-height: 100vh;
+      margin: 0;
+      background: var(--bg-gradient);
+      color: var(--text-main);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .wrap {
+      max-width: 1180px;
+      margin: 24px auto;
+      padding: 16px;
+      display: grid;
+      grid-template-columns: 340px 1fr;
+      gap: 20px;
+    }
+
+    .panel {
+      background: var(--panel-bg);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-radius: 16px;
+      padding: 18px;
+      border: 1px solid var(--panel-border);
+      box-shadow: var(--panel-shadow);
+    }
+
+    .header-panel {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .title {
+      font-weight: 800;
+      font-size: 22px;
+      margin: 0;
+      background: linear-gradient(90deg, #38bdf8, #818cf8);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .subtitle {
+      color: var(--text-muted);
+      font-size: 13px;
+      font-weight: 500;
+      margin-top: 2px;
+    }
+
+    .battery-visual-box {
+      display: flex;
+      gap: 16px;
+      align-items: center;
+      padding: 14px;
+      background: rgba(15, 23, 42, 0.6);
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      margin-top: 14px;
+    }
+
+    .battery-visual {
+      width: 110px;
+      height: 52px;
+      border-radius: 10px;
+      padding: 6px;
+      background: rgba(0, 0, 0, 0.4);
+      border: 2px solid rgba(255, 255, 255, 0.15);
+      display: flex;
+      align-items: center;
+      position: relative;
+    }
+
+    .battery-visual::after {
+      content: '';
+      position: absolute;
+      right: -8px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 6px;
+      height: 18px;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 0 3px 3px 0;
+    }
+
+    .battery-fill {
+      height: 100%;
+      border-radius: 6px;
+      width: 0%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #ffffff;
+      font-weight: 800;
+      font-size: 13px;
+      transition: width 0.4s ease, background 0.3s ease;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.6);
+    }
+
+    .controls-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .btn {
+      border: 0;
+      padding: 10px 14px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-weight: 700;
+      font-size: 13px;
+      transition: all 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      color: var(--text-main);
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .btn:hover:not(:disabled) {
+      background: rgba(255, 255, 255, 0.12);
+      transform: translateY(-1px);
+    }
+
+    .btn:active:not(:disabled) {
+      transform: translateY(0);
+    }
+
+    .btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    .btn.primary {
+      background: var(--accent-gradient);
+      color: #fff;
+      border: none;
+      box-shadow: 0 4px 14px rgba(37, 99, 235, 0.3);
+    }
+
+    .btn.primary:hover:not(:disabled) {
+      box-shadow: 0 6px 20px rgba(37, 99, 235, 0.4);
+    }
+
+    .btn.danger {
+      background: var(--danger-gradient);
+      color: #fff;
+      border: none;
+    }
+
+    .btn.ghost {
+      background: transparent;
+      border: 1px dashed rgba(255, 255, 255, 0.2);
+      color: var(--text-muted);
+    }
+
+    .btn.ghost:hover:not(:disabled) {
+      color: var(--text-main);
+      border-color: rgba(255, 255, 255, 0.4);
+    }
+
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      background: rgba(255, 255, 255, 0.06);
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--text-muted);
+    }
+
+    .status-dot.active {
+      background: var(--success);
+      box-shadow: 0 0 10px var(--success);
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0% { opacity: 1; }
+      50% { opacity: 0.4; }
+      100% { opacity: 1; }
+    }
+
+    canvas {
+      width: 100%;
+      height: 320px;
+      border-radius: 12px;
+      background: rgba(15, 23, 42, 0.4);
+      display: block;
+      margin-bottom: 14px;
+    }
+
+    pre.log {
+      height: 220px;
+      overflow-y: auto;
+      background: rgba(15, 23, 42, 0.8);
+      padding: 14px;
+      border-radius: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      font-family: var(--mono-font);
+      font-size: 12px;
+      line-height: 1.6;
+      color: #38bdf8;
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+
+    /* Modal Dialog Styling */
+    dialog.modal {
+      background: #1e293b;
+      color: var(--text-main);
+      border: 1px solid var(--panel-border);
+      border-radius: 16px;
+      padding: 24px;
+      max-width: 440px;
+      width: 90%;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+    }
+
+    dialog.modal::backdrop {
+      background: rgba(15, 23, 42, 0.8);
+      backdrop-filter: blur(8px);
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 18px;
+    }
+
+    .modal-header h3 { margin: 0; font-size: 18px; }
+
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+      font-weight: 500;
+    }
+
+    .form-group input,
+    .form-group select {
+      width: 100%;
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      background: rgba(15, 23, 42, 0.9);
+      color: #fff;
+      font-size: 14px;
+    }
+
+    .form-group input:focus,
+    .form-group select:focus {
+      outline: none;
+      border-color: var(--accent-blue);
+    }
+
+    @media (max-width: 920px) {
+      .wrap { grid-template-columns: 1fr; }
+    }
+
+    /* V16 colorful light dashboard refresh */
+    :root {
+      --bg-gradient: linear-gradient(135deg,#f4f7ff 0%,#f0fdfa 48%,#fff7ed 100%);
+      --panel-bg: rgba(255,255,255,.88);
+      --panel-border: rgba(148,163,184,.22);
+      --panel-shadow: 0 14px 38px -18px rgba(51,65,85,.25);
+      --text-main:#172033; --text-muted:#64748b;
+      --accent-blue:#2563eb; --accent-cyan:#0891b2;
+      --accent-gradient:linear-gradient(135deg,#6366f1,#06b6d4);
+      --success:#059669; --success-gradient:linear-gradient(135deg,#059669,#34d399);
+      --danger:#e11d48; --danger-gradient:linear-gradient(135deg,#e11d48,#fb7185);
+      --warning:#d97706;
+    }
+    html,body { background-attachment:fixed; }
+    .panel { border-color:rgba(148,163,184,.22); }
+    .battery-visual-box { background:linear-gradient(135deg,#eef2ff,#ecfeff); border-color:#dbeafe; }
+    .battery-visual { background:#e2e8f0; border-color:#cbd5e1; }
+    .battery-visual::after { background:#94a3b8; }
+    .btn { color:#263449; background:#f8fafc; border-color:#dbe3ef; }
+    .btn:hover:not(:disabled) { background:#eaf2ff; }
+    .btn.ghost { color:#64748b; border-color:#cbd5e1; }
+    canvas { background:#f8fbff; border:1px solid #e2e8f0; }
+    pre.log { background:#f8fbff; border-color:#e2e8f0; color:#2563eb; }
+    dialog.modal { background:#fff; color:#172033; }
+    .form-group input,.form-group select { background:#f8fafc;color:#172033;border-color:#cbd5e1; }
+    .metric-card { padding:16px; border-radius:14px; background:linear-gradient(135deg,#fff,#f5f3ff); border:1px solid #e0e7ff; }
+    .metric-label { color:#64748b;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.07em; }
+    .metric-value { font-size:26px;font-weight:800;color:#172033;margin-top:8px; }
+    .metric-note { font-size:12px;color:#64748b;margin-top:5px;line-height:1.5; }
+    .temp-orb { width:48px;height:48px;border-radius:15px;display:grid;place-items:center;background:linear-gradient(135deg,#ffedd5,#fce7f3);font-size:25px; }
+    @media(max-width:920px){.wrap{padding:10px;gap:12px}.panel{padding:14px}}
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+    <!-- Sidebar / Panel -->
+    <aside class="panel">
+      <div>
+        <h2 class="title">Battery Logger v17.4</h2>
+        <div class="subtitle">CLINTOY HUB — Colorful Battery & System Monitor · Windows Companion</div>
+      </div>
+
+      <div class="battery-visual-box">
+        <div class="battery-visual" aria-hidden="true">
+          <div id="batteryFill" class="battery-fill">--%</div>
+        </div>
+        <div style="flex: 1">
+          <div id="percentEl" style="font-weight: 800; font-size: 22px;">--%</div>
+          <div style="display: flex; gap: 8px; margin-top: 4px; align-items: center;">
+            <div id="stateEl" class="subtitle">Checking...</div>
+            <div id="statusLabel" class="status-pill">
+              <span id="statusDot" class="status-dot"></span>
+              <span id="statusText">Ready</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="metric-card" style="margin-top:12px;display:flex;gap:13px;align-items:center;">
+        <div class="temp-orb" aria-hidden="true">🔋</div><div style="flex:1;min-width:0">
+          <div class="metric-label">Battery Health</div><div class="metric-value" id="batteryHealthValue" style="font-size:22px;">N/A</div>
+          <div class="metric-note" id="batteryHealthNote">Waiting for Windows companion…</div>
+          <details style="margin-top:12px;text-align:left;">
+            <summary style="cursor:pointer;font-size:12px;font-weight:700;color:var(--accent-blue);">Manual capacity fallback</summary>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px;">
+              <label style="font-size:11px;color:var(--text-muted);">Design capacity (mWh)<input id="manualDesignCapacity" type="number" min="1" step="1" placeholder="e.g. 50000" style="width:100%;box-sizing:border-box;margin-top:4px;padding:8px;border:1px solid var(--border);border-radius:8px;background:var(--surface);color:var(--text-main);"></label>
+              <label style="font-size:11px;color:var(--text-muted);">Full charge capacity (mWh)<input id="manualFullCapacity" type="number" min="1" step="1" placeholder="e.g. 42000" style="width:100%;box-sizing:border-box;margin-top:4px;padding:8px;border:1px solid var(--border);border-radius:8px;background:var(--surface);color:var(--text-main);"></label>
+            </div>
+            <div style="display:flex;gap:8px;margin-top:8px;">
+              <button id="applyManualCapacity" class="btn primary" type="button" style="flex:1;">Calculate</button>
+              <button id="clearManualCapacity" class="btn" type="button">Clear</button>
+            </div>
+            <div style="font-size:11px;color:var(--text-muted);margin-top:7px;">Use the two capacity values from Windows' battery report. Manual values are saved in this browser and are clearly marked as manual.</div>
+          </details>
+        </div>
+      </div>
+
+      <!-- Controls -->
+      <div style="margin-top: 16px;" class="panel">
+        <div class="controls-grid">
+          <button id="startBtn" class="btn primary">Start</button>
+          <button id="pauseBtn" class="btn" disabled>Pause</button>
+          <button id="resumeBtn" class="btn" disabled>Resume</button>
+          <button id="stopBtn" class="btn danger" disabled>Stop</button>
+        </div>
+
+        <div style="margin-top: 12px; display: flex; gap: 8px;">
+          <button id="exportBtn" class="btn ghost" style="flex: 1;">Export CSV</button>
+          <button id="settingsBtn" class="btn" style="flex: 1;">Settings</button>
+        </div>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 14px;" class="subtitle">
+          <div>Session Status: <strong id="sessionState" style="color: var(--text-main);">Stopped</strong></div>
+          <div>Elapsed: <strong id="elapsedBadge" style="color: var(--accent-blue); font-family: var(--mono-font);">00:00:00</strong></div>
+        </div>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px;" class="subtitle">
+          <div>Interval: <span id="intervalBadge">60s</span></div>
+          <div><button id="clearBtn" class="btn ghost" style="padding: 4px 8px; font-size: 11px;">Clear Log</button></div>
+        </div>
+      </div>
+
+      <!-- Sparkline preview -->
+      <div style="margin-top: 16px;" class="panel">
+        <div class="subtitle" style="margin-bottom: 6px;">Recent 40 Samples</div>
+        <svg id="spark" viewBox="0 0 200 56" preserveAspectRatio="none" style="width: 100%; height: 56px;"></svg>
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main>
+      <section class="panel header-panel">
+        <div>
+          <h3 style="margin: 0; font-size: 18px; font-weight: 700;">Live Monitor & Data Logger</h3>
+          <div class="subtitle">Auto-pauses elapsed timer during suspend and auto-resumes on wake seamlessly.</div>
+        </div>
+        <div id="intervalBadgeTop" class="status-pill">Interval: 60s</div>
+      </section>
+
+      <section class="panel">
+        <canvas id="chartCanvas" aria-label="Battery percentage chart"></canvas>
+        <pre id="logOutput" class="log" role="log" aria-live="polite"></pre>
+      </section>
+    </main>
+  </div>
+
+  <!-- Settings Dialog Modal -->
+  <dialog id="settingsModal" class="modal">
+    <div class="modal-header">
+      <h3>Alarm & Logger Settings</h3>
+      <button id="closeModalBtn" class="btn ghost" style="padding: 4px 8px;">✕</button>
+    </div>
+    <form id="settingsForm" method="dialog">
+      <div class="form-group">
+        <label for="inputLowThreshold">Low Battery Alarm Threshold (%)</label>
+        <input type="number" id="inputLowThreshold" min="1" max="99" value="15" required />
+      </div>
+      <div class="form-group">
+        <label for="inputInterval">Sampling Interval (seconds)</label>
+        <input type="number" id="inputInterval" min="1" max="3600" value="60" required />
+      </div>
+      <div class="form-group">
+        <label for="selectAlarmTone">Alarm Sound Tone Preset</label>
+        <select id="selectAlarmTone">
+          <option value="siren">🚨 Emergency Siren (Attention-Grabbing Default)</option>
+          <option value="police_yelp">🚓 Police Strobe Siren (Ultra-Fast Yelp)</option>
+          <option value="klaxon">💥 Submarine Klaxon Horn (Deep Loud Warning)</option>
+          <option value="high_beep">⚡ High Pitch Pulsing Beep (Sharp)</option>
+          <option value="alarm_clock">⏰ Classic Alarm Clock Ring (Fast Bell)</option>
+          <option value="chime">🎵 Pleasant Musical Chime (Soft)</option>
+          <option value="sci_fi">🛸 Sci-Fi Warp Alarm (Modulated Pulse)</option>
+          <option value="sub_bass">🔊 Heavy Bass Warning (Low Pulse)</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="inputHibernateThreshold">Hibernate Gap Detection (minutes)</label>
+        <input type="number" id="inputHibernateThreshold" min="1" max="60" value="5" required />
+      </div>
+      <div style="margin-bottom: 20px;">
+        <button type="button" id="testAlarmBtn" class="btn" style="width: 100%;">🔔 Test Alarm Sound</button>
+      </div>
+      <div style="display: flex; gap: 10px; justify-content: flex-end;">
+        <button type="button" id="cancelSettingsBtn" class="btn ghost">Cancel</button>
+        <button type="submit" class="btn primary">Save Settings</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      // Storage keys
+      const DB = 'battery_logger_v15_db';
+      const STORE = 'samples';
+      const LOG_KEY = 'battery_logger_v15_log';
+      const SETTINGS_KEY = 'battery_logger_v15_settings';
+      const AUTO_KEY = 'battery_logger_prev_running';
+      const SESSION_KEY = 'battery_logger_v15_session';
+
+      // DOM refs
+      const percentEl = document.getElementById('percentEl');
+      const batteryFill = document.getElementById('batteryFill');
+      const stateEl = document.getElementById('stateEl');
+      const statusText = document.getElementById('statusText');
+      const statusDot = document.getElementById('statusDot');
+      const startBtn = document.getElementById('startBtn');
+      const pauseBtn = document.getElementById('pauseBtn');
+      const resumeBtn = document.getElementById('resumeBtn');
+      const stopBtn = document.getElementById('stopBtn');
+      const exportBtn = document.getElementById('exportBtn');
+      const clearBtn = document.getElementById('clearBtn');
+      const settingsBtn = document.getElementById('settingsBtn');
+      const logOutput = document.getElementById('logOutput');
+      const spark = document.getElementById('spark');
+      const sessionState = document.getElementById('sessionState');
+      const elapsedBadge = document.getElementById('elapsedBadge');
+      const intervalBadge = document.getElementById('intervalBadge');
+      const intervalBadgeTop = document.getElementById('intervalBadgeTop');
+      const chartCanvas = document.getElementById('chartCanvas');
+
+      // Modal DOM refs
+      const settingsModal = document.getElementById('settingsModal');
+      const settingsForm = document.getElementById('settingsForm');
+      const inputLowThreshold = document.getElementById('inputLowThreshold');
+      const inputInterval = document.getElementById('inputInterval');
+      const selectAlarmTone = document.getElementById('selectAlarmTone');
+      const inputHibernateThreshold = document.getElementById('inputHibernateThreshold');
+      const closeModalBtn = document.getElementById('closeModalBtn');
+      const cancelSettingsBtn = document.getElementById('cancelSettingsBtn');
+      const testAlarmBtn = document.getElementById('testAlarmBtn');
+
+      // State
+      let batteryObj = null;
+      let samples = [];
+      let samplingInterval = 60; // seconds
+      let lowThreshold = 15;
+      let alarmTone = 'siren';
+      let hibernateThresholdMinutes = 5;
+
+      let running = false;
+      let paused = false;
+      let autoPausedBySleep = false;
+      let lowTriggered = false;
+
+      let scheduled = null;
+      let sessionStart = null;
+      let pauseStart = null;
+      let totalPaused = 0;
+      let lastSampleTime = 0;
+      let elapsedTimer = null;
+
+      const WAKE_FACTOR = 1.5;
+      let suspendedAt = null;
+
+      // IndexedDB helpers
+      function openDB() {
+        return new Promise((res, rej) => {
+          const r = indexedDB.open(DB, 1);
+          r.onupgradeneeded = () => {
+            const db = r.result;
+            if (!db.objectStoreNames.contains(STORE)) db.createObjectStore(STORE, { keyPath: 't' });
+          };
+          r.onsuccess = () => res(r.result);
+          r.onerror = () => rej(r.error);
+        });
+      }
+
+      async function addSample(s) {
+        try {
+          const db = await openDB();
+          return new Promise((res, rej) => {
+            const tx = db.transaction(STORE, 'readwrite');
+            tx.objectStore(STORE).put(s);
+            tx.oncomplete = () => res();
+            tx.onerror = () => rej(tx.error);
+          });
+        } catch (e) {}
+      }
+
+      async function fetchAllSamples() {
+        try {
+          const db = await openDB();
+          return new Promise((res, rej) => {
+            const tx = db.transaction(STORE, 'readonly');
+            const r = tx.objectStore(STORE).getAll();
+            r.onsuccess = () => res(r.result || []);
+            r.onerror = () => rej(r.error);
+          });
+        } catch (e) { return []; }
+      }
+
+      async function clearAllSamples() {
+        try {
+          const db = await openDB();
+          return new Promise((res, rej) => {
+            const tx = db.transaction(STORE, 'readwrite');
+            tx.objectStore(STORE).clear();
+            tx.oncomplete = () => res();
+            tx.onerror = () => rej(tx.error);
+          });
+        } catch (e) {}
+      }
+
+      // LocalStorage State Flag Helpers
+      function setPrevWasRunning(flag) { try { localStorage.setItem(AUTO_KEY, flag ? '1' : '0'); } catch (e) {} }
+      function getPrevWasRunning() { try { return localStorage.getItem(AUTO_KEY) === '1'; } catch (e) { return false; } }
+      function clearPrevWasRunning() { try { localStorage.removeItem(AUTO_KEY); } catch (e) {} }
+
+      function saveSessionState() {
+        try {
+          const state = { running, paused, sessionStart, totalPaused, pauseStart, lastSampleTime };
+          localStorage.setItem(SESSION_KEY, JSON.stringify(state));
+        } catch (e) {}
+      }
+
+      function loadSessionState() {
+        try {
+          const raw = localStorage.getItem(SESSION_KEY);
+          return raw ? JSON.parse(raw) : null;
+        } catch (e) { return null; }
+      }
+
+      function clearSessionState() {
+        try { localStorage.removeItem(SESSION_KEY); } catch (e) {}
+      }
+
+      // Web Audio API Low Battery Beeping Alarm
+      function playLowBatteryAlarm(toneOverride) {
+        try {
+          const AudioContext = window.AudioContext || window.webkitAudioContext;
+          if (!AudioContext) return;
+          const ctx = new AudioContext();
+          const now = ctx.currentTime;
+          const tone = toneOverride || alarmTone || 'high_beep';
+
+          if (tone === 'siren') {
+            // Ultra attention-grabbing Emergency Wailing Siren (2.0s multi-sweep dual-oscillator)
+            const duration = 2.0;
+            const cycles = 4;
+            const cycleDuration = duration / cycles;
+
+            for (let i = 0; i < cycles; i++) {
+              const startTime = now + i * cycleDuration;
+              const halfCycle = cycleDuration / 2;
+
+              // Primary Sawtooth Oscillator (Wailing 700Hz -> 1600Hz -> 700Hz)
+              const osc1 = ctx.createOscillator();
+              const gain1 = ctx.createGain();
+              osc1.type = 'sawtooth';
+              osc1.frequency.setValueAtTime(700, startTime);
+              osc1.frequency.linearRampToValueAtTime(1600, startTime + halfCycle);
+              osc1.frequency.linearRampToValueAtTime(700, startTime + cycleDuration);
+
+              gain1.gain.setValueAtTime(0.9, startTime);
+              gain1.gain.setValueAtTime(0.9, startTime + cycleDuration - 0.02);
+              gain1.gain.exponentialRampToValueAtTime(0.001, startTime + cycleDuration);
+
+              osc1.connect(gain1);
+              gain1.connect(ctx.destination);
+              osc1.start(startTime);
+              osc1.stop(startTime + cycleDuration);
+
+              // Secondary Square Oscillator (Harmonic Punch 1050Hz -> 2400Hz)
+              const osc2 = ctx.createOscillator();
+              const gain2 = ctx.createGain();
+              osc2.type = 'square';
+              osc2.frequency.setValueAtTime(1050, startTime);
+              osc2.frequency.linearRampToValueAtTime(2400, startTime + halfCycle);
+              osc2.frequency.linearRampToValueAtTime(1050, startTime + cycleDuration);
+
+              gain2.gain.setValueAtTime(0.6, startTime);
+              gain2.gain.setValueAtTime(0.6, startTime + cycleDuration - 0.02);
+              gain2.gain.exponentialRampToValueAtTime(0.001, startTime + cycleDuration);
+
+              osc2.connect(gain2);
+              gain2.connect(ctx.destination);
+              osc2.start(startTime);
+              osc2.stop(startTime + cycleDuration);
+            }
+          } else if (tone === 'chime') {
+            [523.25, 659.25, 783.99].forEach((freq, i) => {
+              const delay = i * 0.15;
+              const osc = ctx.createOscillator();
+              const gain = ctx.createGain();
+              osc.type = 'sine';
+              osc.frequency.setValueAtTime(freq, now + delay);
+              gain.gain.setValueAtTime(0.8, now + delay);
+              gain.gain.exponentialRampToValueAtTime(0.001, now + delay + 0.4);
+              osc.connect(gain); gain.connect(ctx.destination);
+              osc.start(now + delay); osc.stop(now + delay + 0.4);
+            });
+          } else if (tone === 'soft_pulse') {
+            [0, 0.3].forEach(delay => {
+              const osc = ctx.createOscillator();
+              const gain = ctx.createGain();
+              osc.type = 'triangle';
+              osc.frequency.setValueAtTime(440, now + delay);
+              gain.gain.setValueAtTime(0.7, now + delay);
+              gain.gain.exponentialRampToValueAtTime(0.001, now + delay + 0.25);
+              osc.connect(gain); gain.connect(ctx.destination);
+              osc.start(now + delay); osc.stop(now + delay + 0.25);
+            });
+          } else {
+            // Default: high_beep
+            [0, 0.25, 0.5].forEach(delay => {
+              const osc = ctx.createOscillator();
+              const gain = ctx.createGain();
+              osc.type = 'square';
+              osc.frequency.setValueAtTime(880, now + delay);
+              osc.frequency.setValueAtTime(1200, now + delay + 0.1);
+              gain.gain.setValueAtTime(1.0, now + delay);
+              gain.gain.exponentialRampToValueAtTime(0.001, now + delay + 0.2);
+              osc.connect(gain); gain.connect(ctx.destination);
+              osc.start(now + delay); osc.stop(now + delay + 0.2);
+            });
+          }
+        } catch (e) { console.warn('Audio alarm error:', e); }
+      }
+
+      // Utils
+      function nowISO() { return new Date().toISOString(); }
+      function nowLocale() { return new Date().toLocaleString(); }
+
+      function appendLog(line) {
+        try {
+          logOutput.textContent += `[${nowLocale()}] ${line}\n`;
+          logOutput.scrollTop = logOutput.scrollHeight;
+          // Cap stored log in localStorage to last 500 lines
+          const lines = logOutput.textContent.split('\n');
+          const trimmed = lines.length > 500 ? lines.slice(-500).join('\n') : logOutput.textContent;
+          localStorage.setItem(LOG_KEY, trimmed);
+        } catch (e) {}
+      }
+
+      function formatHMS(ms) {
+        if (ms < 0) ms = 0;
+        const t = Math.floor(ms / 1000);
+        const h = Math.floor(t / 3600);
+        const m = Math.floor((t % 3600) / 60);
+        const s = t % 60;
+        return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+      }
+
+      function currentElapsedMs() {
+        if (!sessionStart) return 0;
+        if (paused && pauseStart) return (pauseStart - sessionStart) - totalPaused;
+        return (Date.now() - sessionStart) - totalPaused;
+      }
+
+      function updateElapsedDisplays() { elapsedBadge.textContent = formatHMS(currentElapsedMs()); }
+
+      // Canvas sizing & graphics
+      function ensureCanvasSize() {
+        const dpi = window.devicePixelRatio || 1;
+        const cssH = 320;
+        const cssW = Math.max(320, chartCanvas.clientWidth || 480);
+        chartCanvas.style.height = cssH + 'px';
+        chartCanvas.width = Math.floor(cssW * dpi);
+        chartCanvas.height = Math.floor(cssH * dpi);
+      }
+      window.addEventListener('resize', () => { ensureCanvasSize(); drawChart(); });
+
+      function updateVisual(p, charging) {
+        batteryFill.style.width = (typeof p === 'number' ? p : 0) + '%';
+        batteryFill.textContent = (typeof p === 'number' ? p + '%' : '--%');
+        if (typeof p === 'number' && p <= lowThreshold && !charging) batteryFill.style.background = 'linear-gradient(135deg, #dc2626, #f87171)';
+        else if (charging) batteryFill.style.background = 'linear-gradient(135deg, #059669, #10b981)';
+        else batteryFill.style.background = 'linear-gradient(135deg, #2563eb, #06b6d4)';
+
+        percentEl.textContent = (typeof p === 'number' ? p + '%' : '--%');
+        stateEl.textContent = charging ? '⚡ Charging' : '🔋 On battery';
+        intervalBadge.textContent = samplingInterval + 's';
+        intervalBadgeTop.textContent = 'Interval: ' + samplingInterval + 's';
+        statusText.textContent = running ? (paused ? 'Paused' : 'Running') : 'Ready';
+        if (running && !paused) statusDot.classList.add('active');
+        else statusDot.classList.remove('active');
+      }
+
+      function drawSparkline() {
+        const width = 200, height = 56, pad = 6;
+        while (spark.firstChild) spark.removeChild(spark.firstChild);
+        const pts = samples.slice(-40).map(s => (typeof s.p === 'number' ? s.p : null)).filter(x => x !== null);
+        const svgNS = 'http://www.w3.org/2000/svg';
+        if (!pts.length) {
+          const t = document.createElementNS(svgNS, 'text');
+          t.setAttribute('x', '10'); t.setAttribute('y', '30');
+          t.setAttribute('fill', '#94a3b8'); t.setAttribute('font-size', '11');
+          t.textContent = 'No samples yet'; spark.appendChild(t); return;
+        }
+        const max = Math.max(...pts), min = Math.min(...pts), range = Math.max(1, max - min);
+        const step = (width - pad * 2) / (pts.length - 1 || 1);
+        const points = pts.map((v, i) => {
+          const x = pad + i * step;
+          const y = pad + (1 - (v - min) / range) * (height - pad * 2);
+          return `${x},${y}`;
+        }).join(' ');
+        const poly = document.createElementNS(svgNS, 'polyline');
+        poly.setAttribute('points', points); poly.setAttribute('fill', 'none');
+        poly.setAttribute('stroke', '#38bdf8'); poly.setAttribute('stroke-width', '2');
+        poly.setAttribute('stroke-linecap', 'round'); spark.appendChild(poly);
+      }
+
+      function drawChart() {
+        ensureCanvasSize();
+        const ctx = chartCanvas.getContext('2d');
+        const dpi = window.devicePixelRatio || 1;
+        const w = chartCanvas.width / dpi, h = chartCanvas.height / dpi;
+        ctx.setTransform(dpi, 0, 0, dpi, 0, 0);
+        ctx.clearRect(0, 0, w, h);
+        ctx.fillStyle = '#0f172a'; ctx.fillRect(0, 0, w, h);
+
+        const pts = samples.slice(-200).filter(s => typeof s.p === 'number');
+        if (pts.length < 2) {
+          ctx.fillStyle = '#94a3b8'; ctx.font = '13px Inter';
+          ctx.fillText(running ? 'Waiting for battery samples…' : 'Click Start to begin recording battery samples', 20, 30); return;
+        }
+        const padL = 48, padR = 20, padT = 24, padB = 36;
+        const values = pts.map(s => s.p);
+        const max = Math.max(...values), min = Math.min(...values);
+        const range = Math.max(1, max - min);
+        const step = (w - padL - padR) / (pts.length - 1);
+
+        ctx.strokeStyle = 'rgba(255,255,255,0.06)'; ctx.lineWidth = 1;
+        for (let y = 0; y <= 4; y++) {
+          const gy = padT + y * ((h - padT - padB) / 4);
+          ctx.beginPath(); ctx.moveTo(padL, gy); ctx.lineTo(w - padR, gy); ctx.stroke();
+          const label = Math.round(max - y * (range / 4));
+          ctx.fillStyle = '#64748b'; ctx.font = '11px JetBrains Mono';
+          ctx.fillText(label + '%', 10, gy + 4);
+        }
+
+        const coords = pts.map((pt, i) => {
+          const x = padL + i * step;
+          const y = padT + (1 - (pt.p - min) / range) * (h - padT - padB);
+          return { x, y, meta: pt };
+        });
+
+        ctx.beginPath();
+        for (let i = 0; i < coords.length; i++) {
+          const p0 = coords[i - 1] || coords[i];
+          const p1 = coords[i];
+          const p2 = coords[i + 1] || p1;
+          const p3 = coords[i + 2] || p2;
+          if (i === 0) ctx.moveTo(p1.x, p1.y);
+          const cp1x = p1.x + (p2.x - p0.x) / 6; const cp1y = p1.y + (p2.y - p0.y) / 6;
+          const cp2x = p2.x - (p3.x - p1.x) / 6; const cp2y = p2.y - (p3.y - p1.y) / 6;
+          ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, p2.x, p2.y);
+        }
+        const grad = ctx.createLinearGradient(0, 0, w, 0);
+        grad.addColorStop(0, '#38bdf8'); grad.addColorStop(1, '#818cf8');
+        ctx.strokeStyle = grad; ctx.lineWidth = 3; ctx.stroke();
+
+        ctx.lineTo(w - padR, h - padB); ctx.lineTo(padL, h - padB); ctx.closePath();
+        const fillGrad = ctx.createLinearGradient(0, padT, 0, h);
+        fillGrad.addColorStop(0, 'rgba(56, 189, 248, 0.15)');
+        fillGrad.addColorStop(1, 'rgba(129, 140, 248, 0.02)');
+        ctx.fillStyle = fillGrad; ctx.fill();
+
+        ctx.fillStyle = '#fff'; ctx.strokeStyle = '#38bdf8';
+        coords.forEach(p => {
+          ctx.beginPath(); ctx.arc(p.x, p.y, 3, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+        });
+      }
+
+      // Battery API
+      async function initBatteryAPI() {
+        if ('getBattery' in navigator) {
+          try {
+            batteryObj = await navigator.getBattery();
+            batteryObj.addEventListener('levelchange', onBatteryChange);
+            batteryObj.addEventListener('chargingchange', onBatteryChange);
+            onBatteryChange();
+          } catch (e) { console.warn('Battery API error:', e); }
+        } else {
+          console.warn('Battery API not available — values simulated fallback');
+        }
+      }
+
+      async function onBatteryChange() {
+        if (!batteryObj) return;
+        const p = Math.round(batteryObj.level * 100);
+        updateVisual(p, batteryObj.charging);
+        if (running && !paused) {
+          const entry = { t: nowISO(), p, charging: !!batteryObj.charging, elapsed_ms: currentElapsedMs() };
+          samples.push(entry);
+          await addSample(entry).catch(() => {});
+          appendLog(`(event) ${p}% ${batteryObj.charging ? '(charging)' : ''} — Elapsed: ${formatHMS(entry.elapsed_ms)}`);
+          drawSparkline(); drawChart();
+          if (p <= lowThreshold && !batteryObj.charging && !lowTriggered) {
+            triggerLow(p); lowTriggered = true;
+          }
+        }
+      }
+
+      // Sampling Execution Loop
+      async function sampleOnce() {
+        const now = Date.now();
+        if (lastSampleTime) {
+          const gap = now - lastSampleTime;
+          const thresholdMs = Math.max(1, hibernateThresholdMinutes) * 60 * 1000;
+          if (gap >= thresholdMs) {
+            appendLog(`SYSTEM: detected long gap ${Math.round(gap / 1000)}s >= ${Math.round(thresholdMs / 1000)}s — handling as hibernate`);
+            if (running && !paused) {
+              setPrevWasRunning(true);
+              pauseLogging(true, lastSampleTime);
+              autoPausedBySleep = true;
+              resumeLogging();
+              return;
+            }
+          }
+        }
+
+        lastSampleTime = Date.now();
+        let p = 50, charging = false;
+        if (batteryObj) { p = Math.round(batteryObj.level * 100); charging = !!batteryObj.charging; }
+        else if ('getBattery' in navigator) { try { const b = await navigator.getBattery(); p = Math.round(b.level * 100); charging = !!b.charging; } catch (e) {} }
+        else { p = Math.max(5, Math.min(98, Math.round((Math.random() * 70) + 10))); charging = false; }
+
+        const elapsed_ms = currentElapsedMs();
+        const entry = { t: nowISO(), p, charging, elapsed_ms };
+        samples.push(entry);
+        await addSample(entry).catch(() => {});
+        appendLog(`${p}% ${charging ? '(charging)' : ''} — Elapsed: ${formatHMS(elapsed_ms)}`);
+        updateVisual(p, charging);
+        drawSparkline(); drawChart();
+
+        if (p <= lowThreshold && !charging && !lowTriggered) {
+          triggerLow(p); lowTriggered = true;
+        }
+
+        saveSessionState();
+        scheduleNext();
+      }
+
+      function scheduleNext() {
+        cancelScheduled();
+        const intervalMs = samplingInterval * 1000;
+        const next = (lastSampleTime || Date.now()) + intervalMs;
+        const delay = Math.max(0, next - Date.now());
+        scheduled = setTimeout(sampleOnce, delay);
+      }
+
+      function cancelScheduled() {
+        if (scheduled) { clearTimeout(scheduled); scheduled = null; }
+      }
+
+      // Logging Controls
+      function startLogging() {
+        if (running) return;
+        running = true; paused = false; lowTriggered = false;
+        if (!sessionStart) sessionStart = Date.now();
+        totalPaused = totalPaused || 0; pauseStart = null;
+
+        startBtn.disabled = true; pauseBtn.disabled = false; resumeBtn.disabled = true; stopBtn.disabled = false;
+        sessionState.textContent = 'Running';
+        appendLog('=== SESSION START ===');
+        setPrevWasRunning(true);
+        saveSessionState();
+        lastSampleTime = 0;
+        sampleOnce();
+        startElapsedTimer();
+      }
+
+      function stopLogging() {
+        running = false; paused = false;
+        cancelScheduled(); stopElapsedTimer();
+        startBtn.disabled = false; pauseBtn.disabled = true; resumeBtn.disabled = true; stopBtn.disabled = true;
+        sessionState.textContent = 'Stopped';
+        appendLog('--- SESSION STOPPED ---');
+        setPrevWasRunning(false);
+        clearSessionState();
+        sessionStart = null; totalPaused = 0; pauseStart = null; lastSampleTime = 0;
+        updateElapsedDisplays();
+      }
+
+      function pauseLogging(auto = false, pauseAtMs = null) {
+        if (!running || paused) return;
+        paused = true;
+        pauseStart = (typeof pauseAtMs === 'number') ? pauseAtMs : Date.now();
+        cancelScheduled(); stopElapsedTimer();
+        pauseBtn.disabled = true; resumeBtn.disabled = false;
+        sessionState.textContent = 'Paused';
+        appendLog('--- PAUSED ---');
+        saveSessionState();
+        if (!auto) setPrevWasRunning(false);
+      }
+
+      function resumeLogging() {
+        if (!running || !paused) return;
+        paused = false;
+        const now = Date.now();
+        totalPaused += (now - (pauseStart || now));
+        pauseStart = null;
+        pauseBtn.disabled = false; resumeBtn.disabled = true;
+        sessionState.textContent = 'Running';
+        appendLog('--- RESUMED ---');
+        setPrevWasRunning(true); // Maintain running flag in localStorage across refresh
+        saveSessionState();
+        lastSampleTime = 0;
+        sampleOnce();
+        startElapsedTimer();
+      }
+
+      function startElapsedTimer() {
+        if (elapsedTimer) clearInterval(elapsedTimer);
+        elapsedTimer = setInterval(updateElapsedDisplays, 1000);
+        updateElapsedDisplays();
+      }
+
+      function stopElapsedTimer() {
+        if (elapsedTimer) clearInterval(elapsedTimer);
+        elapsedTimer = null; updateElapsedDisplays();
+      }
+
+      function triggerLow(p) {
+        appendLog(`[CRITICAL ALARM] Low battery threshold crossed: ${p}%`);
+        playLowBatteryAlarm();
+      }
+
+      // Visibility Detection
+      document.addEventListener('visibilitychange', () => {
+        if (document.hidden) {
+          suspendedAt = Date.now();
+          appendLog('SYSTEM: page hidden — recorded suspend timestamp');
+          if (running && !paused) {
+            setPrevWasRunning(true);
+            pauseLogging(true, suspendedAt);
+            autoPausedBySleep = true;
+            addSample({ t: new Date(suspendedAt).toISOString(), p: null, charging: null, elapsed_ms: currentElapsedMs(), meta: { type: 'suspend' } }).catch(() => {});
+          }
+        } else {
+          const now = Date.now();
+          const gap = suspendedAt ? now - suspendedAt : 0;
+          appendLog(`SYSTEM: page visible again — gap ${Math.round(gap / 1000)}s`);
+          const hibernateMs = Math.max(1, hibernateThresholdMinutes) * 60 * 1000;
+
+          if (autoPausedBySleep) {
+            autoPausedBySleep = false;
+            if (getPrevWasRunning()) {
+              appendLog('Auto-resuming after wake (was running before sleep)');
+              resumeLogging();
+            } else {
+              appendLog('Not auto-resuming: previous-run flag not set');
+              clearPrevWasRunning();
+            }
+          } else {
+            if (lastSampleTime && (now - lastSampleTime) >= hibernateMs) {
+              appendLog(`Fallback: detected large gap ${Math.round((now - lastSampleTime) / 1000)}s -> treating as hibernate`);
+              if (running && !paused) {
+                setPrevWasRunning(true);
+                pauseLogging(true, lastSampleTime);
+                autoPausedBySleep = true;
+                resumeLogging();
+              }
+            } else if (lastSampleTime && (now - lastSampleTime) > Math.max(3000, samplingInterval * 1000 * WAKE_FACTOR)) {
+              appendLog('Short wake detected — sampling now');
+              lastSampleTime = 0;
+              sampleOnce();
+            }
+          }
+          suspendedAt = null;
+        }
+      });
+
+      // Focus Listener
+      window.addEventListener('focus', () => {
+        if (autoPausedBySleep) {
+          if (getPrevWasRunning()) {
+            autoPausedBySleep = false;
+            appendLog('Focus handler: auto-resuming after sleep');
+            resumeLogging();
+          } else clearPrevWasRunning();
+          return;
+        }
+        if (!lastSampleTime) return;
+        const now = Date.now();
+        const gap = now - lastSampleTime;
+        const hibernateMs = Math.max(1, hibernateThresholdMinutes) * 60 * 1000;
+        if (gap >= hibernateMs && running && !paused) {
+          appendLog(`Focus fallback: large gap ${Math.round(gap / 1000)}s -> hibernate`);
+          const estimate = now - gap;
+          setPrevWasRunning(true);
+          pauseLogging(true, estimate);
+          resumeLogging();
+        } else if (gap > Math.max(3000, samplingInterval * 1000 * WAKE_FACTOR)) {
+          appendLog('Focus: short gap — sampling now');
+          lastSampleTime = 0;
+          sampleOnce();
+        }
+      });
+
+      // Event Listeners for Buttons
+      startBtn.addEventListener('click', () => startLogging());
+      pauseBtn.addEventListener('click', () => pauseLogging(false));
+      resumeBtn.addEventListener('click', () => resumeLogging());
+      stopBtn.addEventListener('click', () => stopLogging());
+
+      clearBtn.addEventListener('click', async () => {
+        if (!confirm('Clear stored logs and samples?')) return;
+        await clearAllSamples();
+        samples = [];
+        logOutput.textContent = '';
+        localStorage.removeItem(LOG_KEY);
+        drawSparkline(); drawChart();
+        appendLog('Cleared stored samples.');
+      });
+
+      exportBtn.addEventListener('click', async () => {
+        const rows = await fetchAllSamples();
+        const header = ['timestamp', 'percent', 'charging', 'elapsed_seconds', 'meta'].join(',');
+        const body = rows.map(r => {
+          const meta = r.meta ? JSON.stringify(r.meta).replace(/"/g, '""') : '';
+          return `${r.t},${r.p === null ? '' : r.p},${r.charging === null ? '' : (r.charging ? 1 : 0)},${Math.round((r.elapsed_ms || 0) / 1000)},${meta}`;
+        }).join('\n');
+        const csv = header + '\n' + body;
+        const blob = new Blob([csv], { type: 'text/csv' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `battery_log_${new Date().toISOString().replace(/[:.]/g, '-')}.csv`;
+        a.click();
+        URL.revokeObjectURL(url);
+      });
+
+      // Settings Modal Wireup
+      settingsBtn.addEventListener('click', () => {
+        inputLowThreshold.value = lowThreshold;
+        inputInterval.value = samplingInterval;
+        selectAlarmTone.value = alarmTone;
+        inputHibernateThreshold.value = hibernateThresholdMinutes;
+        settingsModal.showModal();
+      });
+
+      closeModalBtn.addEventListener('click', () => settingsModal.close());
+      cancelSettingsBtn.addEventListener('click', () => settingsModal.close());
+      testAlarmBtn.addEventListener('click', () => playLowBatteryAlarm(selectAlarmTone.value));
+
+      settingsForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        lowThreshold = parseInt(inputLowThreshold.value, 10) || 15;
+        samplingInterval = parseInt(inputInterval.value, 10) || 60;
+        alarmTone = selectAlarmTone.value || 'high_beep';
+        hibernateThresholdMinutes = parseInt(inputHibernateThreshold.value, 10) || 5;
+        saveSettings();
+        updateVisual(batteryObj ? Math.round(batteryObj.level * 100) : 50, batteryObj ? batteryObj.charging : false);
+        appendLog(`Settings updated: Low Threshold=${lowThreshold}%, Interval=${samplingInterval}s, Tone=${alarmTone}, Hibernate Gap=${hibernateThresholdMinutes}m`);
+        settingsModal.close();
+      });
+
+      // Settings storage
+      function loadSettings() {
+        try {
+          const raw = localStorage.getItem(SETTINGS_KEY);
+          if (!raw) return;
+          const s = JSON.parse(raw);
+          samplingInterval = s.samplingInterval || samplingInterval;
+          lowThreshold = s.lowThreshold || lowThreshold;
+          alarmTone = s.alarmTone || alarmTone;
+          hibernateThresholdMinutes = s.hibernateThresholdMinutes || hibernateThresholdMinutes;
+        } catch (e) {}
+      }
+
+      function saveSettings() {
+        try {
+          const s = { samplingInterval, lowThreshold, alarmTone, hibernateThresholdMinutes };
+          localStorage.setItem(SETTINGS_KEY, JSON.stringify(s));
+        } catch (e) {}
+      }
+
+      // App Bootstrap
+      async function bootstrap() {
+        ensureCanvasSize();
+        loadSettings();
+
+        // Restore logs from localStorage
+        try {
+          const savedLog = localStorage.getItem(LOG_KEY);
+          if (savedLog) {
+            logOutput.textContent = savedLog;
+            logOutput.scrollTop = logOutput.scrollHeight;
+          }
+        } catch (e) {}
+
+        // Restore saved DB samples
+        try { samples = await fetchAllSamples(); } catch (e) { samples = []; }
+        drawSparkline(); drawChart();
+        await initBatteryAPI();
+
+        // Restore Session State if active before refresh
+        const savedSession = loadSessionState();
+        if (savedSession && (savedSession.running || getPrevWasRunning())) {
+          running = true;
+          sessionStart = typeof savedSession.sessionStart === 'number' ? savedSession.sessionStart : Date.now();
+          totalPaused = savedSession.totalPaused || 0;
+          pauseStart = savedSession.pauseStart || null;
+
+          // detect long offline gap (possible shutdown/restart). If large gap -> pause elapsed so downtime isn't counted
+          const lastSample = savedSession.lastSampleTime || 0;
+          const nowMs = Date.now();
+          const hibernateMs = Math.max(1, hibernateThresholdMinutes) * 60 * 1000;
+          const gap = lastSample ? (nowMs - lastSample) : 0;
+
+          if (gap >= hibernateMs) {
+            // Long gap - treat as shutdown/hibernate: pause elapsed to avoid counting offline time
+            paused = true;
+            pauseStart = lastSample || nowMs;
+            autoPausedBySleep = true;
+            startBtn.disabled = false; pauseBtn.disabled = true; resumeBtn.disabled = false; stopBtn.disabled = false;
+            sessionState.textContent = 'Paused';
+            appendLog(`SYSTEM: Detected long offline gap ${Math.round(gap/1000)}s — pausing elapsed (will auto-resume on wake)`);
+            saveSessionState();
+          } else {
+            // Short gap - assume the computer stayed on; restore paused/running as before
+            paused = !!savedSession.paused;
+            if (paused) {
+              pauseBtn.disabled = true; resumeBtn.disabled = false;
+              sessionState.textContent = 'Paused';
+            } else {
+              startBtn.disabled = true; pauseBtn.disabled = false; resumeBtn.disabled = true; stopBtn.disabled = false;
+              sessionState.textContent = 'Running';
+              startElapsedTimer();
+              scheduleNext();
+            }
+            appendLog('SYSTEM: Restored active session state from local storage.');
+          }
+        } else {
+          appendLog('App ready.');
+        }
+      }
+
+      // Windows companion bridge: battery capacity/health only. CPU temperature was removed.
+      const MANUAL_CAPACITY_KEY = 'battery_logger_manual_capacity_v174';
+      function getManualCapacity() {
+        try { return JSON.parse(localStorage.getItem(MANUAL_CAPACITY_KEY) || 'null'); } catch (_) { return null; }
+      }
+      function renderManualCapacity() {
+        const saved = getManualCapacity();
+        if (saved) {
+          document.getElementById('manualDesignCapacity').value = saved.design || '';
+          document.getElementById('manualFullCapacity').value = saved.full || '';
+        }
+      }
+      function displayHealth(d) {
+        const health = document.getElementById('batteryHealthValue');
+        const note = document.getElementById('batteryHealthNote');
+        const validAuto = Number(d?.designCapacityMWh) > 0 && Number(d?.fullChargeMWh) > 0 && Number(d?.batteryHealthPercent) > 0;
+        if (validAuto) {
+          health.textContent = Number(d.batteryHealthPercent).toFixed(1) + '%';
+          const pack = d.batteryName ? ` · ${d.batteryName}` : '';
+          const source = d.batterySource ? ` · Source: ${d.batterySource}` : '';
+          note.textContent = `Full charge: ${Number(d.fullChargeMWh).toLocaleString()} mWh / Design: ${Number(d.designCapacityMWh).toLocaleString()} mWh · Wear: ${d.wearPercent ?? 'N/A'}%${pack}${source}`;
+          return;
+        }
+        const manual = getManualCapacity();
+        if (manual && Number(manual.design) > 0 && Number(manual.full) > 0 && Number(manual.full) <= Number(manual.design) * 1.5) {
+          const pct = Math.min(100, Number(manual.full) / Number(manual.design) * 100);
+          const wear = Math.max(0, 100 - Number(manual.full) / Number(manual.design) * 100);
+          health.textContent = pct.toFixed(1) + '%';
+          note.textContent = `MANUAL estimate · Full charge: ${Number(manual.full).toLocaleString()} mWh / Design: ${Number(manual.design).toLocaleString()} mWh · Wear: ${wear.toFixed(1)}%. Replace with updated values after checking a new battery report.`;
+          return;
+        }
+        health.textContent = 'N/A';
+        note.textContent = d?.batteryMessage || 'Windows did not provide battery capacity data. Open Manual capacity fallback and enter values from the Windows battery report.';
+      }
+      async function updateHardwareStatus() {
+        try {
+          const companionApi = (location.protocol === 'http:' && location.hostname === '127.0.0.1' && location.port === '8765')
+            ? '/api/status' : 'http://127.0.0.1:8765/api/status';
+          const r = await fetch(companionApi, { cache: 'no-store' });
+          if (!r.ok) throw new Error('Companion unavailable');
+          const d = await r.json();
+          displayHealth(d);
+        } catch (e) {
+          displayHealth({batteryMessage:'Windows companion is not connected. Launch the app with Start-Battery-Logger.vbs.'});
+        }
+      }
+      document.getElementById('applyManualCapacity').addEventListener('click', () => {
+        const design = Number(document.getElementById('manualDesignCapacity').value);
+        const full = Number(document.getElementById('manualFullCapacity').value);
+        if (!(design > 0 && full > 0 && full <= design * 1.5)) {
+          alert('Enter valid capacity values in mWh. Full charge capacity must be positive and reasonably close to design capacity.'); return;
+        }
+        localStorage.setItem(MANUAL_CAPACITY_KEY, JSON.stringify({design, full, savedAt:new Date().toISOString()}));
+        displayHealth(null);
+      });
+      document.getElementById('clearManualCapacity').addEventListener('click', () => {
+        localStorage.removeItem(MANUAL_CAPACITY_KEY);
+        document.getElementById('manualDesignCapacity').value = '';
+        document.getElementById('manualFullCapacity').value = '';
+        updateHardwareStatus();
+      });
+      renderManualCapacity();
+      updateHardwareStatus(); setInterval(updateHardwareStatus, 5000);
+
+      bootstrap();
+
+      // Debug helper
+      window.__batteryLogger = {
+        startLogging, pauseLogging, resumeLogging, stopLogging,
+        playLowBatteryAlarm,
+        state: () => ({ running, paused, sessionStart, pauseStart, totalPaused, lastSampleTime }),
+        samplesGetter: fetchAllSamples
+      };
+
+      setTimeout(() => { ensureCanvasSize(); drawChart(); }, 120);
+    });
+  </script>
+</body>
+
+</html>
